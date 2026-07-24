@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import CategoriesPage from "../pages/categories/categorypage";
+import CategoriesPage from "../pages/categories/categoryPage";
 import DashboardPage from "../pages/dashboard/dashboardPage";
 import ProductsPage from "../pages/products/productsPage";
 import AppLayout from "../components/layout/appLayout";
