@@ -72,6 +72,30 @@ const deleteProduct = (id: string): Product[] => {
     return updatedProducts;
 };
 
+// update stock
+const updateStock = (productId: string, quantityChange: number): Product[] => {
+    const products = getProducts();
+
+    const updatedProducts = products.map((product) => {
+        if (product.id !== productId) {
+            return product;
+        }
+        const newStockQuantity = product.stockQuantity + quantityChange;
+
+        if (newStockQuantity < 0) {
+            throw new Error("Stock quantity cannot be negative.");
+        }
+
+        return {
+            ...product,
+            stockQuantity: newStockQuantity,
+            updatedAt: new Date().toISOString(),
+        };
+    });
+    saveProducts(updatedProducts);
+    return updatedProducts;
+};
+
 export const productStorageService = {
     getProducts,
     getProductById,
@@ -79,4 +103,5 @@ export const productStorageService = {
     addProduct,
     updateProduct,
     deleteProduct,
+    updateStock,
 };
