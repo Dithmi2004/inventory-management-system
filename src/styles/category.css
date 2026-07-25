@@ -113,6 +113,12 @@
   background: #cbd5e1;
 }
 
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .category-list-card {
   overflow: hidden;
 }

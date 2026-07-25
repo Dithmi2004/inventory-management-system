@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
+import ConfirmModal from "../../components/common/ConfirmModal";
 import CategoryForm from "../../components/category/categoryForm";
 import CategoryList from "../../components/category/categoryList";
 import { categoryStorageService } from "../../services/categoryStorageService";
 import type {Category,CategoryFormValues,} from "../../types/category";
-import { generateProductId } from "../../utils/productIdentifiers";
+import { getCurrentTimestamp } from "../../utils/date";
+import { generateInventoryId } from "../../utils/inventoryIdentifiers";
 import "../../styles/category.css";
 
 const CategoriesPage = () => {
@@ -13,23 +16,29 @@ const CategoriesPage = () => {
 
   const [editingCategory, setEditingCategory] =
     useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] =
+    useState<Category | null>(null);
 
-  const handleSubmit = (values: CategoryFormValues) => {
+  const handleSubmit = (
+    values: CategoryFormValues
+  ): boolean => {
+    const normalizedName = values.name.trim();
     const categoryAlreadyExists =
       categoryStorageService.categoryExists(
-        values.name,
+        normalizedName,
         editingCategory?.id
       );
 
     if (categoryAlreadyExists) {
-      window.alert("Category already exists.");
-      return;
+      toast.error("Category already exists.");
+      return false;
     }
 
     if (editingCategory) {
       const updatedCategory: Category = {
         ...editingCategory,
-        name: values.name,
+        name: normalizedName,
+        updatedAt: getCurrentTimestamp(),
       };
 
       const updatedCategories =
@@ -37,42 +46,69 @@ const CategoriesPage = () => {
 
       setCategories(updatedCategories);
       setEditingCategory(null);
-      return;
+
+      toast.success("Category updated successfully.");
+      return true;
     }
 
+    const currentDate = getCurrentTimestamp();
+
     const newCategory: Category = {
-      id: generateProductId(),
-      name: values.name,
-      createdAt: new Date().toISOString(),
+      id: generateInventoryId(),
+      name: normalizedName,
+      createdAt: currentDate,
+      updatedAt: currentDate,
     };
 
     const updatedCategories =
       categoryStorageService.addCategory(newCategory);
 
     setCategories(updatedCategories);
+
+    toast.success("Category added successfully.");
+    return true;
   };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleDelete = (category: Category) => {
-    const confirmed = window.confirm(
-      `Delete "${category.name}"?`
-    );
+    setCategoryToDelete(category);
+  };
 
-    if (!confirmed) {
+  const handleConfirmDelete = () => {
+    if (!categoryToDelete) {
       return;
     }
 
-    const updatedCategories =
-      categoryStorageService.deleteCategory(category.id);
+    try {
+      const updatedCategories =
+        categoryStorageService.deleteCategory(
+          categoryToDelete.id
+        );
 
-    setCategories(updatedCategories);
+      setCategories(updatedCategories);
+      toast.success("Category deleted successfully.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to delete category.";
 
-    if (editingCategory?.id === category.id) {
-      setEditingCategory(null);
+      toast.error(message);
+    } finally {
+      setCategoryToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setCategoryToDelete(null);
   };
 
   const handleCancelEdit = () => {
@@ -87,16 +123,14 @@ const CategoriesPage = () => {
       </header>
 
       <div className="category-content">
-        <CategoryForm
-          editingCategory={editingCategory}
-          onSubmit={handleSubmit}
-          onCancelEdit={handleCancelEdit}
-        />
+        <CategoryForm editingCategory={editingCategory} onSubmit={handleSubmit} onCancelEdit={handleCancelEdit}/>
 
-        <CategoryList
-          categories={categories}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+        <CategoryList categories={categories} onEdit={handleEdit} onDelete={handleDelete}/>
+
+        <ConfirmModal isOpen={categoryToDelete !== null} title="Delete Category"
+          message={`Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
         />
       </div>
     </div>

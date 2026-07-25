@@ -4,7 +4,9 @@ import { categorySchema } from "../../validation/categorySchema";
 
 interface CategoryFormProps {
     editingCategory: Category | null;
-    onSubmit: (values: CategoryFormValues) => void;
+    onSubmit: (
+        values: CategoryFormValues
+    ) => boolean;
     onCancelEdit: () => void;
 }
 
@@ -21,13 +23,17 @@ const CategoryForm = ({ editingCategory, onSubmit, onCancelEdit, }: CategoryForm
         <div className="category-form-card">
             <h2>{editingCategory ? "Edit Category" : "Add Category"}</h2>
 
-            <Formik
-                initialValues={formValues}
-                validationSchema={categorySchema}
-                enableReinitialize
-                onSubmit={(values, { resetForm }) => {
-                    onSubmit({ name: values.name.trim(), });
-                    resetForm();
+            <Formik initialValues={formValues} validationSchema={categorySchema}
+                enableReinitialize onSubmit={(values, formikHelpers) => {
+                    const isSuccessful = onSubmit({
+                        name: values.name.trim(),
+                    });
+
+                    if (isSuccessful) {
+                        formikHelpers.resetForm();
+                    }
+
+                    formikHelpers.setSubmitting(false);
                 }}>
 
                 {({ errors, touched, isSubmitting, handleChange, values }) => (
@@ -35,17 +41,9 @@ const CategoryForm = ({ editingCategory, onSubmit, onCancelEdit, }: CategoryForm
                         <div className="form-group">
                             <label htmlFor="name">Category Name</label>
 
-                            <input id="name"
-                                name="name"
-                                type="text"
-                                placeholder="Enter category name"
-                                value={values.name}
-                                onChange={handleChange}
-                                className={
-                                    errors.name && touched.name
-                                        ? "form-input input-error"
-                                        : "form-input"
-                                } />
+                            <input id="name" name="name" type="text" placeholder="Enter category name"
+                                value={values.name} onChange={handleChange}
+                                className={errors.name && touched.name ? "form-input input-error" : "form-input"} />
 
                             {errors.name && touched.name && (
                                 <p className="error-message">{errors.name}</p>
@@ -53,15 +51,15 @@ const CategoryForm = ({ editingCategory, onSubmit, onCancelEdit, }: CategoryForm
                         </div>
 
                         <div className="form-actions">
-                            <button type="submit" className="primary-button" disabled={isSubmitting}>
-                                {editingCategory ? "Update Category" : "Add Category"}
-                            </button>
-
                             {editingCategory && (
-                                <button type="button" className="secondary-button" onClick={onCancelEdit}>
-                                    Cancel
+                                <button type="button" className="secondary-button" onClick={onCancelEdit} disabled={isSubmitting}>
+                                    Cancel Edit
                                 </button>
                             )}
+
+                            <button type="submit" className="primary-button" disabled={isSubmitting}>
+                                {isSubmitting ? "Saving..." : editingCategory ? "Update Category" : "Add Category"}
+                            </button>
                         </div>
                     </Form>
                 )}

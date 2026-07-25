@@ -1,4 +1,4 @@
-export const generateProductId = (): string => {
+export const generateInventoryId = (): string => {
   return crypto.randomUUID();
 };
 
