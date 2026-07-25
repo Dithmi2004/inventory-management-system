@@ -57,8 +57,6 @@ npm run lint
 
 ## Screenshots
 
-Save the application screenshots in `docs/screenshots/` using the filenames shown below.
-
 ### Dashboard
 
 ![Dashboard screenshot](docs/screenshots/dashboard.png)
@@ -78,11 +76,3 @@ Save the application screenshots in `docs/screenshots/` using the filenames show
 ### Dark Mode
 
 ![Dark mode screenshot](docs/screenshots/dark-mode.png)
-
-## Suggested Screenshots to Capture
-
-- Dashboard in desktop view showing summary cards, charts, and low-stock products
-- Products page in desktop view showing filters, bulk actions, product table, and stock history
-- Categories page in desktop view showing category form and table
-- Mobile view showing the bottom navigation and responsive product/category layout
-- Dark mode dashboard or product page
