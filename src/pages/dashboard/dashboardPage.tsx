@@ -1,4 +1,5 @@
 import { Boxes, Layers3, PackageCheck, PackageX, } from "lucide-react";
+import CategoryProductCountList from "../../components/dashboard/CategoryProductCountList";
 import InventoryChart from "../../components/dashboard/InventoryChart";
 import LowStockList from "../../components/dashboard/LowStockList";
 import SummaryCard from "../../components/dashboard/SummaryCard";
@@ -15,10 +16,18 @@ const DashboardPage = () => {
 
   const outOfStockProducts = products.filter((product) => product.stockQuantity === 0).length;
   const inStockProducts = products.filter((product) => product.stockQuantity > 0).length;
-  const categoryLabels = categories.map((category) => category.name);
-  const categoryCounts = categories.map(
-    (category) =>
-      products.filter((product) => product.categoryId === category.id).length
+  const categoryProductCounts = categories.map(
+    (category) => ({
+      id: category.id,
+      name: category.name,
+      productCount: products.filter(
+        (product) => product.categoryId === category.id
+      ).length,
+    })
+  );
+  const categoryLabels = categoryProductCounts.map((category) => category.name);
+  const categoryCounts = categoryProductCounts.map(
+    (category) => category.productCount
   );
   const lowStockProducts = products
     .filter(
@@ -50,6 +59,8 @@ const DashboardPage = () => {
 
       <InventoryChart categoryLabels={categoryLabels} categoryCounts={categoryCounts}
         inStock={inStockProducts} outOfStock={outOfStockProducts} />
+
+      <CategoryProductCountList categories={categoryProductCounts} />
 
       <LowStockList products={lowStockProducts} />
     </section>
