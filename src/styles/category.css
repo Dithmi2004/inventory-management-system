@@ -10,7 +10,7 @@
 }
 
 .page-header p {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .category-content {
@@ -23,10 +23,10 @@
 .category-form-card,
 .category-list-card,
 .empty-state {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgb(15 23 42 / 6%);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .category-form-card {
@@ -53,22 +53,28 @@
 .form-group label {
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-muted);
 }
 
 .form-input {
   width: 100%;
   padding: 11px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
   outline: none;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
+.form-input::placeholder {
+  color: var(--text-secondary);
+}
+
 .form-input:focus {
-  border-color: #2563eb;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
 }
 
@@ -96,21 +102,21 @@
 }
 
 .primary-button {
-  background: #2563eb;
+  background: var(--primary);
   color: #ffffff;
 }
 
 .primary-button:hover {
-  background: #1d4ed8;
+  background: var(--primary-hover);
 }
 
 .secondary-button {
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--border);
+  color: var(--text-muted);
 }
 
 .secondary-button:hover {
-  background: #cbd5e1;
+  background: var(--input-border);
 }
 
 .primary-button:disabled,
@@ -128,7 +134,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .category-list-header h2 {
@@ -137,7 +143,7 @@
 
 .category-list-header span {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .category-table-wrapper {
@@ -152,14 +158,14 @@
 .category-table th,
 .category-table td {
   padding: 15px 20px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .category-table th {
-  background: #f8fafc;
+  background: var(--surface-muted);
   font-size: 13px;
-  color: #475569;
+  color: var(--text-muted);
 }
 
 .category-table td {
@@ -187,11 +193,11 @@
 }
 
 .edit-button {
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .edit-button:hover {
-  background: #dbeafe;
+  background: var(--primary-soft);
 }
 
 .delete-button {
@@ -212,7 +218,7 @@
 }
 
 .empty-state p {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 900px) {

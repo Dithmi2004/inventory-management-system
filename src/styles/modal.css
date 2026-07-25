@@ -12,7 +12,7 @@
   position: relative;
   width: min(100%, 420px);
   padding: 28px;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 16px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
   text-align: center;
@@ -29,13 +29,13 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .modal-close-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--surface-muted);
+  color: var(--text-primary);
 }
 
 .confirm-modal-icon {
@@ -52,12 +52,12 @@
 .confirm-modal h2 {
   margin: 0 0 10px;
   font-size: 21px;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .confirm-modal p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 

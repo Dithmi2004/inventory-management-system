@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
 import type { Category } from "../../types/category";
 import type { StockFilter } from "../../types/productFilters";
 
@@ -58,6 +58,7 @@ const ProductFilters = ({
 
       <button type="button" className="secondary-button clear-filter-button"
         onClick={onClearFilters} disabled={!hasActiveFilters}>
+        <RotateCcw size={16} />
         Clear
       </button>
     </div>

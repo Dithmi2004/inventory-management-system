@@ -1,4 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react";
+import { LOW_STOCK_THRESHOLD } from "../../constants/inventory";
 import type { Category } from "../../types/category";
 import type { Product } from "../../types/product";
 import StockAdjustment from "./StockAdjustment";
@@ -6,6 +7,9 @@ import StockAdjustment from "./StockAdjustment";
 interface ProductListProps {
     products: Product[];
     categories: Category[];
+    selectedProductIds: string[];
+    onToggleProductSelection: (productId: string) => void;
+    onToggleAllProducts: (productIds: string[]) => void;
     onEdit: (product: Product) => void;
     onDelete: (product: Product) => void;
     onUpdateStock: (
@@ -17,16 +21,50 @@ interface ProductListProps {
 const ProductList = ({
     products,
     categories,
+    selectedProductIds,
+    onToggleProductSelection,
+    onToggleAllProducts,
     onEdit,
     onDelete,
     onUpdateStock,
 }: ProductListProps) => {
+    const productIds = products.map((product) => product.id);
+    const allProductsSelected =
+        productIds.length > 0 &&
+        productIds.every((productId) =>
+            selectedProductIds.includes(productId)
+        );
+
     const getCategoryName = (categoryId: string): string => {
         const category = categories.find(
             (item) => item.id === categoryId
         );
 
         return category?.name ?? "Unknown category";
+    };
+
+    const getStockBadgeClass = (stockQuantity: number): string => {
+        if (stockQuantity === 0) {
+            return "stock-badge out-of-stock";
+        }
+
+        if (stockQuantity <= LOW_STOCK_THRESHOLD) {
+            return "stock-badge low-stock";
+        }
+
+        return "stock-badge in-stock";
+    };
+
+    const getStockLabel = (stockQuantity: number): string => {
+        if (stockQuantity === 0) {
+            return "Out of Stock";
+        }
+
+        if (stockQuantity <= LOW_STOCK_THRESHOLD) {
+            return `${stockQuantity} Low Stock`;
+        }
+
+        return `${stockQuantity} In Stock`;
     };
 
     if (products.length === 0) {
@@ -51,6 +89,14 @@ const ProductList = ({
                 <table className="product-table">
                     <thead>
                         <tr>
+                            <th className="selection-column">
+                                <input
+                                    type="checkbox"
+                                    checked={allProductsSelected}
+                                    onChange={() => onToggleAllProducts(productIds)}
+                                    aria-label="Select all products"
+                                />
+                            </th>
                             <th>Product</th>
                             <th>Product ID</th>
                             <th>Category</th>
@@ -64,14 +110,22 @@ const ProductList = ({
                     <tbody>
                         {products.map((product) => (
                             <tr key={product.id}>
+                                <td className="selection-column">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedProductIds.includes(product.id)}
+                                        onChange={() => onToggleProductSelection(product.id)}
+                                        aria-label={`Select ${product.name}`}
+                                    />
+                                </td>
                                 <td>{product.name}</td>
                                 <td>{product.sku}</td>
                                 <td>{getCategoryName(product.categoryId)}</td>
                                 <td>Rs. {product.price.toFixed(2)}
                                 </td>
                                 <td>
-                                    <span className={product.stockQuantity > 0 ? "stock-badge in-stock" : "stock-badge out-of-stock"}>
-                                        {product.stockQuantity > 0 ? `${product.stockQuantity} In Stock` : "Out of Stock"}
+                                    <span className={getStockBadgeClass(product.stockQuantity)}>
+                                        {getStockLabel(product.stockQuantity)}
                                     </span>
                                 </td>
                                 <td>

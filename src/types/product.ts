@@ -19,3 +19,14 @@ export interface ProductFormValues {
   description?: string;
 }
 
+export interface StockHistoryEntry {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  quantityChange: number;
+  previousStockQuantity: number;
+  updatedStockQuantity: number;
+  createdAt: string;
+}
+

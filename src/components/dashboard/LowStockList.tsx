@@ -8,7 +8,7 @@ interface LowStockListProps {
 const LowStockList = ({ products }: LowStockListProps) => {
   if (products.length === 0) {
     return (
-      <div className="dashboard-section">
+      <div className="dashboard-section low-stock-section">
         <div className="dashboard-section-header">
           <h3>Low Stock Products</h3>
         </div>
@@ -24,7 +24,7 @@ const LowStockList = ({ products }: LowStockListProps) => {
   }
 
   return (
-    <div className="dashboard-section">
+    <div className="dashboard-section low-stock-section">
       <div className="dashboard-section-header">
         <h3>Low Stock Products</h3>
         <span>{products.length} products</span>
