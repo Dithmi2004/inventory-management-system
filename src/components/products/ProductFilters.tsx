@@ -1,10 +1,6 @@
 import { Search } from "lucide-react";
 import type { Category } from "../../types/category";
-
-export type StockFilter =
-  | "ALL"
-  | "IN_STOCK"
-  | "OUT_OF_STOCK";
+import type { StockFilter } from "../../types/productFilters";
 
 interface ProductFiltersProps {
   categories: Category[];

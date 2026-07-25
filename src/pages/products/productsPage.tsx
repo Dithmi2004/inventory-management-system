@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
+import ConfirmModal from "../../components/common/ConfirmModal";
 import ProductForm from "../../components/products/ProductForm";
-import ProductFilters, { type StockFilter, } from "../../components/products/ProductFilters";
+import ProductFilters from "../../components/products/ProductFilters";
 import ProductList from "../../components/products/ProductList";
 import { categoryStorageService } from "../../services/categoryStorageService";
 import { productStorageService } from "../../services/productStorageService";
 import type { Category } from "../../types/category";
+import type { StockFilter } from "../../types/productFilters";
 import type { Product, ProductFormValues, } from "../../types/product";
-import { generateProductId } from "../../utils/productIdentifiers";
+import { getCurrentTimestamp } from "../../utils/date";
+import { generateInventoryId } from "../../utils/inventoryIdentifiers";
+import { filterProducts } from "../../utils/productFilters";
 import "../../styles/product.css";
 
 const ProductsPage = () => {
@@ -14,26 +19,61 @@ const ProductsPage = () => {
 
   const [categories] = useState<Category[]>(() => categoryStorageService.getCategories());
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] =
+    useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("ALL");
 
-  const handleEdit = (product: Product) => { setEditingProduct(product); };
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   const handleDelete = (product: Product) => {
-    const confirmed = window.confirm(`Delete "${product.name}"?`);
+    setProductToDelete(product);
+  };
 
-    if (!confirmed) {
+  const handleConfirmDelete = () => {
+    if (!productToDelete) {
       return;
     }
 
-    const updatedProducts = productStorageService.deleteProduct(product.id);
+    try {
+      const updatedProducts =
+        productStorageService.deleteProduct(
+          productToDelete.id
+        );
 
-    setProducts(updatedProducts);
+      setProducts(updatedProducts);
 
-    if (editingProduct?.id === product.id) {
-      setEditingProduct(null);
+      if (editingProduct?.id === productToDelete.id) {
+        setEditingProduct(null);
+      }
+
+      toast.success("Product deleted successfully.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to delete product.";
+
+      toast.error(message);
+    } finally {
+      setProductToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setProductToDelete(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
   };
 
   const handleUpdateStock = (productId: string, quantityChange: number) => {
@@ -41,73 +81,75 @@ const ProductsPage = () => {
       const updatedProducts = productStorageService.updateStock(productId, quantityChange);
 
       setProducts(updatedProducts);
+      toast.success(
+        quantityChange > 0 ? "Stock increased successfully." : "Stock decreased successfully."
+      );
     }
     catch (error) {
       const message = error instanceof Error ? error.message : "Unable to update stock.";
 
-      alert(message);
+      toast.error(message);
     }
   };
 
   const handleClearFilters = () => { setSearchTerm(""); setSelectedCategoryId(""); setStockFilter("ALL"); };
 
-  const handleSubmit = (values: ProductFormValues) => {
-    const skuExists = productStorageService.isSkuExists(values.sku, editingProduct?.id);
+  const handleSubmit = (
+    values: ProductFormValues
+  ): boolean => {
+    const normalizedValues: ProductFormValues = {
+      ...values,
+      name: values.name.trim(),
+      sku: values.sku.trim().toUpperCase(),
+      description: values.description?.trim() ?? "",
+    };
+
+    const skuExists = productStorageService.isSkuExists(normalizedValues.sku, editingProduct?.id);
 
     if (skuExists) {
-      alert("A product with this Product ID already exists.");
-      return;
+      toast.error("A product with this SKU already exists.");
+      return false;
     }
 
     if (editingProduct) {
+      const updatedAt = getCurrentTimestamp();
       const updatedProduct: Product = {
         ...editingProduct,
-        name: values.name,
-        sku: values.sku,
-        categoryId: values.categoryId,
-        price: Number(values.price),
-        stockQuantity: Number(values.stockQuantity),
-        updatedAt: new Date().toISOString(),
+        ...normalizedValues,
+        price: Number(normalizedValues.price),
+        stockQuantity: Number(normalizedValues.stockQuantity),
+        updatedAt,
       };
 
       const updatedProducts = productStorageService.updateProduct(updatedProduct);
 
       setProducts(updatedProducts);
       setEditingProduct(null);
-      return;
+      toast.success("Product updated successfully.");
+      return true;
     }
 
-    const currentDate = new Date().toISOString();
-
+    const currentTimestamp = getCurrentTimestamp();
     const newProduct: Product = {
-      id: generateProductId(),
-      name: values.name,
-      sku: values.sku,
-      categoryId: values.categoryId,
-      price: Number(values.price),
-      stockQuantity: Number(values.stockQuantity),
-      createdAt: currentDate,
-      updatedAt: currentDate,
+      id: generateInventoryId(),
+      ...normalizedValues,
+      price: Number(normalizedValues.price),
+      stockQuantity: Number(normalizedValues.stockQuantity),
+      createdAt: currentTimestamp,
+      updatedAt: currentTimestamp,
     };
 
     const updatedProducts = productStorageService.addProduct(newProduct);
     setProducts(updatedProducts);
+    toast.success("Product added successfully.");
+    return true;
   };
 
-  const filteredProducts = products.filter((product) => {
-    const normalizedSearchTerm =
-      searchTerm.trim().toLowerCase();
-
-    const matchesSearch = product.name.toLowerCase().includes(normalizedSearchTerm) ||
-      product.sku.toLowerCase().includes(normalizedSearchTerm);
-
-    const matchesCategory = selectedCategoryId === "" || product.categoryId === selectedCategoryId;
-
-    const matchesStock = stockFilter === "ALL" ||
-      (stockFilter === "IN_STOCK" && product.stockQuantity > 0) ||
-      (stockFilter === "OUT_OF_STOCK" && product.stockQuantity === 0);
-
-    return (matchesSearch && matchesCategory && matchesStock);
+  const filteredProducts = filterProducts({
+    products,
+    searchTerm,
+    selectedCategoryId,
+    stockFilter,
   });
 
   return (
@@ -119,7 +161,7 @@ const ProductsPage = () => {
 
       <div className="product-content">
         <ProductForm categories={categories} editingProduct={editingProduct} onSubmit={handleSubmit}
-          onCancelEdit={() => setEditingProduct(null)} />
+          onCancelEdit={handleCancelEdit} />
 
         <section className="product-list-section">
           <ProductFilters categories={categories} searchTerm={searchTerm} selectedCategoryId={selectedCategoryId}
@@ -128,6 +170,14 @@ const ProductsPage = () => {
 
           <ProductList products={filteredProducts} categories={categories} onEdit={handleEdit}
             onDelete={handleDelete} onUpdateStock={handleUpdateStock} />
+
+          <ConfirmModal
+            isOpen={productToDelete !== null}
+            title="Delete Product"
+            message={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCancelDelete}
+          />
         </section>
       </div>
     </div>

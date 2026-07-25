@@ -2,12 +2,14 @@ import { Form, Formik } from "formik";
 import type { Product, ProductFormValues } from "../../types/product";
 import type { Category } from "../../types/category";
 import { productSchema } from "../../validation/productSchema";
-import { generateSku } from "../../utils/productIdentifiers";
+import { generateSku } from "../../utils/inventoryIdentifiers";
 
 interface ProductFormProps {
   categories: Category[];
   editingProduct: Product | null;
-  onSubmit: (values: ProductFormValues) => void;
+  onSubmit: (
+    values: ProductFormValues
+  ) => boolean;
   onCancelEdit: () => void;
 }
 
@@ -24,6 +26,7 @@ const ProductForm = ({
       categoryId: editingProduct.categoryId,
       price: editingProduct.price,
       stockQuantity: editingProduct.stockQuantity,
+      description: editingProduct.description ?? "",
     }
     : {
       name: "",
@@ -31,6 +34,7 @@ const ProductForm = ({
       categoryId: "",
       price: "",
       stockQuantity: "",
+      description: "",
     };
 
   return (
@@ -38,17 +42,23 @@ const ProductForm = ({
       <h2>{editingProduct ? "Edit Product" : "Add Product"}</h2>
 
       <Formik initialValues={initialValues} validationSchema={productSchema}
-        enableReinitialize onSubmit={(values, { resetForm }) => {
-          onSubmit({
+        enableReinitialize onSubmit={(values, formikHelpers) => {
+          const isSuccessful = onSubmit({
             name: values.name.trim(),
             sku: values.sku.trim().toUpperCase(),
             categoryId: values.categoryId,
             price: Number(values.price),
             stockQuantity: Number(values.stockQuantity),
+            description: values.description?.trim() ?? "",
           });
-          resetForm();
+
+          if (isSuccessful) {
+            formikHelpers.resetForm();
+          }
+
+          formikHelpers.setSubmitting(false);
         }}>
-        {({ errors, touched, values, handleChange, setFieldValue }) => (
+        {({ errors, touched, values, handleChange, setFieldValue, isSubmitting }) => (
           <Form className="product-form">
             <div className="form-group">
               <label htmlFor="name">Product Name</label>
@@ -128,15 +138,15 @@ const ProductForm = ({
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="primary-button" disabled={categories.length === 0}>
-                {editingProduct ? "Update Product" : "Add Product"}
-              </button>
-
               {editingProduct && (
-                <button type="button" className="secondary-button" onClick={onCancelEdit}>
-                  Cancel
+                <button type="button" className="secondary-button" onClick={onCancelEdit} disabled={isSubmitting}>
+                  Cancel Edit
                 </button>
               )}
+
+              <button type="submit" className="primary-button" disabled={isSubmitting || categories.length === 0}>
+                {isSubmitting ? "Saving..." : editingProduct ? "Update Product" : "Add Product"}
+              </button>
             </div>
 
             {categories.length === 0 && (

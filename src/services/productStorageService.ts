@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import type { Product } from "../types/product";
+import { getCurrentTimestamp } from "../utils/date";
 
 // get all
 const getProducts = (): Product[] => {
@@ -11,8 +12,7 @@ const getProducts = (): Product[] => {
         const parsedProducts = JSON.parse(storedProducts);
         return Array.isArray(parsedProducts) ? parsedProducts : [];
     }
-    catch (error) {
-        console.error("Failed to load products:", error);
+    catch {
         return [];
     }
 };
@@ -25,8 +25,8 @@ const saveProducts = (products: Product[]): void => {
             JSON.stringify(products)
         );
     }
-    catch (error) {
-        console.error("Failed to save products:", error);
+    catch {
+        return;
     }
 };
 
@@ -73,26 +73,52 @@ const deleteProduct = (id: string): Product[] => {
 };
 
 // update stock
-const updateStock = (productId: string, quantityChange: number): Product[] => {
+const updateStock = (
+    productId: string,
+    quantityChange: number
+): Product[] => {
+    if (
+        !Number.isInteger(quantityChange) ||
+        quantityChange === 0
+    ) {
+        throw new Error(
+            "Stock change must be a non-zero whole number."
+        );
+    }
+
     const products = getProducts();
+
+    const productExists = products.some(
+        (product) => product.id === productId
+    );
+
+    if (!productExists) {
+        throw new Error("Product not found.");
+    }
 
     const updatedProducts = products.map((product) => {
         if (product.id !== productId) {
             return product;
         }
-        const newStockQuantity = product.stockQuantity + quantityChange;
 
-        if (newStockQuantity < 0) {
-            throw new Error("Stock quantity cannot be negative.");
+        const updatedStockQuantity =
+            product.stockQuantity + quantityChange;
+
+        if (updatedStockQuantity < 0) {
+            throw new Error(
+                "Stock quantity cannot be negative."
+            );
         }
 
         return {
             ...product,
-            stockQuantity: newStockQuantity,
-            updatedAt: new Date().toISOString(),
+            stockQuantity: updatedStockQuantity,
+            updatedAt: getCurrentTimestamp(),
         };
     });
+
     saveProducts(updatedProducts);
+
     return updatedProducts;
 };
 

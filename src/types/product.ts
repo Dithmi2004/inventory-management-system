@@ -5,6 +5,7 @@ export interface Product {
   categoryId: string;
   price: number;
   stockQuantity: number;
+  description?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -15,5 +16,6 @@ export interface ProductFormValues {
   categoryId: string;
   price: number | "";
   stockQuantity: number | "";
+  description?: string;
 }
 

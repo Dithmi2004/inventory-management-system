@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "../constants/storageKeys";
+import { productStorageService } from "./productStorageService";
 import type { Category } from "../types/category";
 
 // getall
@@ -11,8 +12,7 @@ const getCategories = (): Category[] => {
         const parsedCategories = JSON.parse(storedCategories);
         return Array.isArray(parsedCategories) ? parsedCategories : [];
     }
-    catch (error) {
-        console.error("Failed to load categories:", error);
+    catch {
         return [];
     }
 };
@@ -25,8 +25,8 @@ const saveCategories = (categories: Category[]): void => {
             JSON.stringify(categories)
         );
     }
-    catch (error) {
-        console.error("Failed to save categories:", error);
+    catch {
+        return;
     }
 };
 
@@ -43,6 +43,14 @@ const categoryExists = (name: string, excludedCategoryId?: string): boolean => {
         const isDifferentCategory = category.id !== excludedCategoryId;
         return hasSameName && isDifferentCategory;
     });
+};
+
+const isCategoryInUse = (categoryId: string): boolean => {
+    const products = productStorageService.getProducts();
+
+    return products.some(
+        (product) => product.categoryId === categoryId
+    );
 };
 
 // add
@@ -63,18 +71,30 @@ const updateCategory = (updatedCategory: Category): Category[] => {
 };
 
 // delete
-const deleteCategory = (id: string): Category[] => {
+const deleteCategory = (categoryId: string): Category[] => {
+    if (isCategoryInUse(categoryId)) {
+        throw new Error(
+            "This category cannot be deleted because it is assigned to one or more products."
+        );
+    }
+
     const categories = getCategories();
-    const updatedCategories = categories.filter((category) => category.id !== id);
+    const updatedCategories = categories.filter(
+        (category) => category.id !== categoryId
+    );
+
     saveCategories(updatedCategories);
+
     return updatedCategories;
 };
 
 export const categoryStorageService = {
     getCategories,
+    saveCategories,
     getCategoryById,
     categoryExists,
     addCategory,
     updateCategory,
     deleteCategory,
+    isCategoryInUse,
 };
